@@ -1,0 +1,209 @@
+x-common-settings:
+  chain-settings: &chain-settings
+    image: 172.31.43.179:5000/stc-chain
+    healthcheck:
+      test: ["CMD", "/bin/bash", "/app/check_healthy.sh"]
+      interval: 6s
+      timeout: 5s
+      retries: 20
+    ports:
+      - target: 8545
+        published: 8545
+        mode: host
+    volumes:
+      - pos_db:/app/pos_db
+      - chain_log:/app/log
+      - chain_data:/app/blockchain_data
+  
+  storage-settings: &storage-settings
+    image: 172.31.43.179:5000/stc-storage-node
+    healthcheck:
+      test: ["CMD", "/bin/bash", "/app/check_healthy.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+    ports:
+      - target: 5678
+        published: 5678
+        mode: host
+    volumes:
+      - storage_db:/app/db
+      - storage_network:/app/network
+      - storage_log:/app/log
+
+volumes:
+  pos_db:
+    driver: local
+  chain_log:
+    driver: local
+  chain_data:
+    driver: local
+  storage_db:
+    driver: local
+  storage_network:
+    driver: local
+  storage_log:
+    driver: local
+
+services:
+  chain0:
+    <<: *chain-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker0
+    command: ./launch_node.sh 0
+
+  chain1:
+    <<: *chain-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker1
+    command: ./launch_node.sh 1
+
+  chain2:
+    <<: *chain-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker2
+    command: ./launch_node.sh 2
+
+  chain3:
+    <<: *chain-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker3
+    command: ./launch_node.sh 3
+
+  storage-contract-deployer:
+    image: 172.31.43.179:5000/stc-storage-contracts
+    deploy:
+      placement:
+          constraints:
+            - node.labels.role == worker
+      restart_policy:
+        condition: on-failure
+    command: ./deploy_contracts.sh
+
+  storage0:
+    <<: *storage-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker0
+    command: ./launch_node.sh 0
+
+  storage1:
+    <<: *storage-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker1
+    command: ./launch_node.sh 1
+
+  storage2:
+    <<: *storage-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker2
+    command: ./launch_node.sh 2
+
+  storage3:
+    <<: *storage-settings
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker3
+    command: ./launch_node.sh 3
+
+  kv:
+    image: 172.31.43.179:5000/stc-storage-kv
+    deploy:
+      placement:
+        constraints:
+          - node.labels.role == worker
+    ports:
+      - target: 6789
+        published: 6789
+    command: ./launch_node.sh
+  
+  proxy:
+    image: 172.31.43.179:5000/stc-reverse-proxy
+    deploy:
+      placement:
+        constraints:
+          - node.labels.role == manager
+    networks:
+      - default
+      - stc_service_network
+    ports:
+      - target: 8545
+        published: 8545
+        mode: host
+      - target: 12537
+        published: 12537
+        mode: host
+
+  writer0:
+    image: 172.31.43.179:5000/stc-storage-client
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker0
+      restart_policy:
+        condition: on-failure
+    command: ./start_upload.sh 0 1024
+
+  writer1:
+    image: 172.31.43.179:5000/stc-storage-client
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker1
+      restart_policy:
+        condition: on-failure
+    command: ./start_upload.sh 1 1024
+
+  writer2:
+    image: 172.31.43.179:5000/stc-storage-client
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker2
+      restart_policy:
+        condition: on-failure
+    command: ./start_upload.sh 2 1024
+
+  writer3:
+    image: 172.31.43.179:5000/stc-storage-client
+    deploy:
+      placement:
+        constraints:
+          - node.labels.name == worker3
+      restart_policy:
+        condition: on-failure
+    command: ./start_upload.sh 3 1024
+
+  # indexer:
+  #   image: 172.31.43.179:5000/stc-storage-client
+  #   depends_on:
+  #     storage0:
+  #       condition: service_healthy
+  #     storage1:
+  #       condition: service_healthy
+  #     storage2:
+  #       condition: service_healthy
+  #     storage3:
+  #       condition: service_healthy
+  #   ports:
+  #     - 12345:12345
+  #   command: ./0g-storage-client indexer --trusted http://storage0:5678,http://storage1:5678,http://storage2:5678,http://storage3:5678
+    
+    
+networks:
+  stc_service_network:
+    external: true

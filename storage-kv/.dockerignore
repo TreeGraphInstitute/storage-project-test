@@ -1,0 +1,16 @@
+target
+**/target
+**/*.rs.bk
+**/__pycache__
+.idea/
+.vscode/
+.phabricator*
+build/
+build_clippy/
+**/*.log
+*~
+.DS_Store
+tests/artifacts/**/*.dbg.json
+
+stc-storage-kv/target
+stc-storage-kv/tests

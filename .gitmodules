@@ -1,0 +1,18 @@
+[submodule "blockchain/stc-conflux-rust"]
+	path = blockchain/stc-conflux-rust
+	url = https://github.com/TreeGraphInstitute/conflux-rust.git
+[submodule "storage-client/stc-storage-client"]
+	path = storage-client/stc-storage-client
+	url = https://github.com/TreeGraphInstitute/0g-storage-client.git
+[submodule "stress-storage-node"]
+	path = stress-storage-node
+	url = https://github.com/TreeGraphInstitute/stress-storage-node.git
+[submodule "storage-contracts/stc-storage-contracts"]
+	path = storage-contracts/stc-storage-contracts
+	url = https://github.com/TreeGraphInstitute/0g-storage-contracts.git
+[submodule "storage-node/stc-storage-node"]
+	path = storage-node/stc-storage-node
+	url = https://github.com/TreeGraphInstitute/0g-storage-node.git
+[submodule "storage-kv/stc-storage-kv"]
+	path = storage-kv/stc-storage-kv
+	url = https://github.com/TreeGraphInstitute/0g-storage-kv.git
